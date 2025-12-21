@@ -718,23 +718,62 @@ app.get('/api/tmdb-image/:size/:filename', async (req, res) => {
         return res.status(400).send('Invalid parameters');
     }
 
+    const tmdbUrl = `https://image.tmdb.org/t/p/${size}/${filename}`;
+
+    // Vercel环境或Serverless环境：不可写文件系统，直接转发流
+    if (process.env.VERCEL) {
+        try {
+            // 支持自定义反代 URL
+            let targetUrl = tmdbUrl;
+            if (process.env.TMDB_PROXY_URL) {
+                const proxyBase = process.env.TMDB_PROXY_URL.replace(/\/$/, '');
+                targetUrl = `${proxyBase}/t/p/${size}/${filename}`;
+            }
+
+            console.log(`[Vercel Image] Proxying: ${targetUrl}`);
+            const response = await axios({
+                url: targetUrl,
+                method: 'GET',
+                responseType: 'stream',
+                timeout: 10000
+            });
+            // 缓存控制：公共缓存，有效期1天
+            res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
+            response.data.pipe(res);
+        } catch (error) {
+            console.error(`[Vercel Image Error] ${tmdbUrl}:`, error.message);
+            res.status(404).send('Image not found');
+        }
+        return;
+    }
+
+    // --- 本地/VPS 环境下启用磁盘缓存 ---
     const localPath = path.join(IMAGE_CACHE_DIR, size, filename);
     const localDir = path.dirname(localPath);
 
     // 1. 如果本地存在且文件大小 > 0，更新访问时间并返回
     if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
         // 更新文件的访问时间 (atime) 和修改时间 (mtime)，用于 LRU 清理
-        const now = new Date();
-        fs.utimesSync(localPath, now, now);
+        try {
+            const now = new Date();
+            fs.utimesSync(localPath, now, now);
+        } catch (e) { } // 忽略权限错误
         return res.sendFile(localPath);
     }
 
     // 2. 下载并缓存
     if (!fs.existsSync(localDir)) {
-        fs.mkdirSync(localDir, { recursive: true });
+        try {
+            fs.mkdirSync(localDir, { recursive: true });
+        } catch (e) {
+            console.error('[Cache Mkdir Error]', e.message);
+            // 如果创建目录失败，降级为直接流式转发
+            try {
+                const response = await axios({ url: tmdbUrl, method: 'GET', responseType: 'stream' });
+                return response.data.pipe(res);
+            } catch (err) { return res.status(404).send('Image not found'); }
+        }
     }
-
-    const tmdbUrl = `https://image.tmdb.org/t/p/${size}/${filename}`;
 
     try {
         console.log(`[Image Proxy] Fetching: ${tmdbUrl}`);
@@ -757,7 +796,9 @@ app.get('/api/tmdb-image/:size/:filename', async (req, res) => {
         res.sendFile(localPath);
     } catch (error) {
         console.error(`[Image Proxy Error] ${tmdbUrl}:`, error.message);
-        if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+        if (fs.existsSync(localPath)) {
+            try { fs.unlinkSync(localPath); } catch (e) { }
+        }
         res.status(404).send('Image not found');
     }
 });
