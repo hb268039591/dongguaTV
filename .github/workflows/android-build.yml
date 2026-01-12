@@ -212,7 +212,7 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: E视界-apk
+          name: 薇影视-apk
           path: android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
@@ -220,9 +220,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          name: "E视界 ${{ steps.version.outputs.VERSION }}"
+          name: "薇影视 ${{ steps.version.outputs.VERSION }}"
           body: |
-            ## 📦 E视界 ${{ steps.version.outputs.VERSION }}
+            ## 📦 薇影视 ${{ steps.version.outputs.VERSION }}
             
             ### 📱 Android APK 下载
             
