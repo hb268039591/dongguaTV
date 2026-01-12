@@ -258,7 +258,7 @@ jobs:
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: E视界TV-geckoview-apks
+          name: 薇影视TV-geckoview-apks
           path: android-tv/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
@@ -266,7 +266,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          name: "E视界 ${{ steps.version.outputs.VERSION }}"
+          name: "薇影视TV ${{ steps.version.outputs.VERSION }}"
           body: |
             ## 📺 电视盒子版 (GeckoView) - ${{ steps.version.outputs.VERSION }}
             
@@ -276,11 +276,11 @@ jobs:
             
             | 文件 | 架构 | 体积 | 适用设备 |
             |------|------|------|----------|
-            | `E视界TV-...-geckoview-arm64-v8a.apk` | ARM 64位 | ~100MB | 大多数现代盒子 |
-            | `E视界TV-...-geckoview-armeabi-v7a.apk` | ARM 32位 | ~80MB | 老旧盒子 |
-            | `E视界TV-...-geckoview-x86_64.apk` | x86 64位 | ~100MB | 模拟器/部分平板 |
-            | `E视界TV-...-geckoview-x86.apk` | x86 32位 | ~80MB | 老旧模拟器 |
-            | `E视界TV-...-geckoview-universal.apk` | 全架构 | ~350MB | 通用版 |
+            | `薇影视TV-...-geckoview-arm64-v8a.apk` | ARM 64位 | ~100MB | 大多数现代盒子 |
+            | `薇影视TV-...-geckoview-armeabi-v7a.apk` | ARM 32位 | ~80MB | 老旧盒子 |
+            | `薇影视TV-...-geckoview-x86_64.apk` | x86 64位 | ~100MB | 模拟器/部分平板 |
+            | `薇影视TV-...-geckoview-x86.apk` | x86 32位 | ~80MB | 老旧模拟器 |
+            | `薇影视TV-...-geckoview-universal.apk` | 全架构 | ~350MB | 通用版 |
             
             > 💡 **如何选择**：不确定设备架构时，请下载 `universal` 版本
             
